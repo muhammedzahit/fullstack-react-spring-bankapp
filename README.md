@@ -8,4 +8,4 @@ This is a fullstack banking app that allows users to create accounts, deposit an
 
 I will be breaking down the app into sections. You can traverse the sections by git checking out the corresponding branch. Or just click on the links below.
 
-1. Section 1 : Constructiong Project Skeleton [branch]
+* [Section 1 : Constructiong Project Skeleton](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec1)
