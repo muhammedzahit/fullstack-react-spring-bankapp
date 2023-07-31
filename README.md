@@ -1,24 +1,66 @@
-# Section 1 : Constructing Project Skeleton
+# Section 2 : Initializing Relationships in Database
 
-## General Project Structure
+![relationships](./drawio/relationships.png)
 
-![fullstack.png](./drawio/fullstack.png)
+In this section, we will initialize the relationships in the database. I will use postgreSQL as the database for this project. You can use any database of your choice. 
 
-Our project will be divided into two main parts: the frontend and the backend. The frontend will be responsible for the user interface and the backend will be responsible for the business logic and data storage. The frontend and backend will communicate with each other through a REST API.
+```yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 1597532000
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+```
 
-In backend we used Java Spring Boot framework. Spring Boot is a framework that allows us to build stand-alone, production-grade Spring based Applications easily. It is preconfigured with the Spring’s project, so our project will be up and run quickly. It also provides a range of additional features that are common to large projects, such as embedded servers, security, metrics, health checks, and externalized configuration.
+In the above code, I have configured the database connection. I have used the `create-drop` option for the `ddl-auto` property. This will create the database tables when the application starts and drop the tables when the application stops. You can use `update` option if you want to update the tables when the application starts. 
 
-In database we will use PostgreSQL. I will running PostgreSQL in a Docker container but you can also install it locally on your machine. 
+If change value to `create` then it will create the tables when the application starts and will not drop the tables when the application stops. You can use this option if you initialize the database automatically rather than manually in pgAdmin. And then you can remove this option.
 
-## UML Diagram
+We created two folders in the `com.example.demo` package. One is `entities` and the other is `repositories`. In the `entities` folder, we will create the model classes and in the `repositories` folder, we will create the repository interfaces. 
 
-![uml.png](./drawio/uml.png)
+```java
+public class User{
+    ........
 
-We have a base entity class called `BaseEntity` which will be extended by all other entities. It contains the `id` field which will be used to uniquely identify each entity. We have `TokenableBaseEntity` class which extends `BaseEntity` and contains the `token` field. This class will be extended by all entities that need to be tokenable.
+    @ManyToOne
+    @JoinColumn(name = "responsible_id")
+    private Employee responsible;
 
-We have `User`, `Employee`, `Director` classes which extend `TokenableBaseEntity` class. `Director` class responsible for recruiting and dismissing employees. `Employee` class responsible for creating and deleting account for users. `User` class is customer for bank. It can deposit and withdraw money from bank account. It can request for loan and credit card. It can also transfer money to other users.
+    @OneToMany(mappedBy = "user")
+    private List<SavingAccount> savingAccounts;
+
+    @OneToMany(mappedBy = "user")
+    private List<CreditAccount> creditAccounts;
+
+}
+```
+
+In the above code, we have created two relationships. One is `ManyToOne` and the other is `OneToMany`. The `ManyToOne` relationship is between the `User` and `Employee` entities. The `OneToMany` relationship is between the `User` and `SavingAccount` entities and between the `User` and `CreditAccount` entities. And notice that we give Employee object name as `responsible`. We will use that name in the `Employee` entity. 
+
+```java
+
+public class Employee{
+    ......
+
+    @ManyToOne
+    @JoinColumn(name = "director_id")
+    private Director director;
+
+    @OneToMany(mappedBy = "responsible")
+    private List<User> users;
 
 
-![relationships.png](drawio/relationships.png)
+}
+```
 
-Users can have N number of accounts. Employee can have N number of users and Director can have N number of employees. Director doesn't have direct relation with users. 
+If you look OneToMany relationship in this class. You will notice we used the tag `mappedBy = "responsible"`. This means that the `responsible` is the name of Employee object in the `User` entity. 
+
+And the other classes are as follows.
