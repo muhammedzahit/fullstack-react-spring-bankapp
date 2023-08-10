@@ -10,4 +10,6 @@ public class FullstackSpringReactBankingappApplication {
 		SpringApplication.run(FullstackSpringReactBankingappApplication.class, args);
 	}
 
+
+
 }

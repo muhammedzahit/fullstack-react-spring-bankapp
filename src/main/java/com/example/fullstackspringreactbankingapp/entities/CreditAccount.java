@@ -1,15 +1,15 @@
 package com.example.fullstackspringreactbankingapp.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Setter
+@Getter
 @Table(name = "credit_accounts")
 public class CreditAccount{
     @Id
@@ -21,6 +21,8 @@ public class CreditAccount{
     private double accountLimit;
     private double minimumPaymentRate;
     private double interestRate;
+
+    private boolean isMonthlyMinimumPayed;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
