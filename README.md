@@ -11,3 +11,5 @@ I will be breaking down the app into sections. You can traverse the sections by 
 * [Section 1 : Constructing Project Skeleton](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec1)
 
 * [Section 2 : Initializing Relationships in Database](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec2)
+
+* [Section 3 : Implementing Business Layer](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec3)
