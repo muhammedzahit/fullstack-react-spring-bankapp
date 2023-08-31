@@ -1,114 +1,100 @@
-# Section 3 : Implementing Business Layer
+# Section 4 : Implementing Presentation Layer
 
 ![alt text](/drawio/fullstack.png)
 
-In section 2 we have created the database and the tables. Now we will create the business layer. The business layer will be a logical functions that will be called by the API layer. The business layer will be responsible for the following:
+In this section, we will implement the presentation layer of our application. We will create Rest Controllers that communicates with Service (Business Logic) layer and return the response to the client. Service layer will communicate with the Data Access Layer to get the data from the database.
+When Rest Controllers communicate with Service Layer, they will use DTOs (Data Transfer Objects) to transfer the data. DTOs are simple POJOs (Plain Old Java Objects) that contains only the attributes and have getters and setters for them. DTOs are used to transfer the data between layers. We will use ModelMapper to convert the DTOs to Entities and vice versa.
 
-1. Connecting to the database
-2. Executing the SQL queries
-3. Returning the results to the API layer
-
-In this section we created `services` folder for logical classes. Since we dont have any presentation layer yet, we will test the business layer using CommandLineRunner bean in Spring Boot. Classes inherited from CommandLineRunner will be executed after the application is started.
-
+### Director Controller
 ```java
-// packages
 
-@Component
+// implementations
+
+@RestController
+@RequestMapping("/api/director")
 @RequiredArgsConstructor
-public class Runner implements CommandLineRunner {
+public class DirectorController {
+
     private final DirectorService directorService;
-    private final EmployeeService employeeService;
-    private final UserService userService;
-    @Override
-    public void run(String... args) throws Exception {
+    private final ModelMapper modelMapper;
 
-        // Enable Debugger to better see effects of service functions
-        // Or you can use comment method
+    @PostMapping("/add_new_recruit")
+    public ResponseEntity<String> addNewRecruit(@RequestBody AddNewRecruitDto addNewRecruitDto){
+        try{
+            Director directorById = directorService.getDirectorById(addNewRecruitDto.getDirectorId());
+            Employee map = modelMapper.map(addNewRecruitDto, Employee.class);
+            map.setDirector(directorById); map.setId(null);
 
-        // Testing directorService Functions
-
-        Employee newRecruit = Employee.builder().director(null).users(null).email(null).fullName("mm")
-                .password("mm").netSalary(12000.0).build();
-        directorService.addNewRecruit(newRecruit);
-
-        directorService.giveRaise(newRecruit.getId(), 0.25);
-
-        User newUser = User.builder().fullName("muhammed zahid").password("1234").email("mzahit@gmail.com").netSalary(25000.0).build();
-
-        userService.addUser(newUser);
-
-        //directorService.dismissRecruit(newRecruit.getId());
-
-        employeeService.createAccount(newUser.getId(), AccountType.SAVING);
-
-        // Testing employeeService functions
-
-        List<SavingAccount> savingAccounts = employeeService.getSavingAccountsByUserId(newUser.getId());
-        SavingAccount savingAccount = savingAccounts.get(0);
-        System.out.println(savingAccount.getBalance() + " // " + savingAccount.getInterestRate() + " // " + savingAccount.getId());
-
-        //employeeService.deleteAccount(savingAccount.getId(), AccountType.SAVING);
-
-        //savingAccounts = employeeService.getSavingAccountsByUserId(newUser.getId());
-        //System.out.println(savingAccounts.size());
-
-        // Testing userService functions
-        // Saving Account Scenario
-
-        userService.depositMoneyToAccount(10000.0, newUser.getId(), savingAccount.getId(), AccountType.SAVING);
-
-        userService.withdrawMoneyFromAccount(5000.0, newUser.getId(), savingAccount.getId(), AccountType.SAVING);
-
-        userService.enableSaving(newUser.getId(), savingAccount.getId());
-
-        // Catch Error
-        // Because saving enabled on this account it cannot let service withdraw money
-        try {
-            userService.withdrawMoneyFromAccount(1.0, newUser.getId(), savingAccount.getId(), AccountType.SAVING);
+            directorService.addNewRecruit(map);
         }catch (Exception ex){
-            System.out.println("ERROR : " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
-
-        // Credit Account Scenario
-
-        long creditAccountId = employeeService.createAccount(newUser.getId(), AccountType.CREDIT);
-
-        userService.withdrawMoneyFromAccount(10000.00, newUser.getId(), creditAccountId, AccountType.CREDIT);
-
-        // Pay or Debit interests end of month
-        // Saving Account interest is 0.31 so saving account balance should be 5000*1.31 = 6550
-        // Credit account interest also is 0.31 so credit account balance should be -10000*1.31 = -13.100
-        directorService.fulfillMonthlyOperations();
+        return ResponseEntity.ok("Hired new recruit with name " + addNewRecruitDto.getFullName());
     }
+
+    @GetMapping("/monthly_operation")
+    public ResponseEntity<String> monthlyOperation(){
+        directorService.fulfillMonthlyOperations();
+        return ResponseEntity.ok("Monthly operations has performed");
+    }
+
+    // ...
 
 }
 
 ```
 
-For seeing the effects of the functions, you can use debugger or comment the functions that you dont want to see the effects.
+We annote class with `@RestController` annotation to tell Spring that this class is a Rest Controller. We also define the base path for this controller with `@RequestMapping` annotation. We will use this path to reach the methods in this controller.
 
-I think most cruicial part of the business layer is the `fulfillMonthlyOperations` function. This function will be called by the director at the end of the month. This function will be responsible for the following:
+As you can see we defined `private final` variables for `DirectorService` and `ModelMapper` and we used `@RequiredArgsConstructor` annotation to create a constructor with these variables. Because Spring will handle the dependency injection for us. We will use these variables in our methods. 
 
-1. Paying the interests of the saving accounts
-2. Debiting the interests of the credit accounts
-3. Send Warning users that have not payed their credit minimum payment. In real life this users warned by legal procedures.
+When writing a request method, first we define method type (GET, POST, PUT etc.) and if we want to give parameters firstly we must choose parameter type. In this example we used `@RequestBody` annotation to get the request body as a parameter. We also used `@PathVariable` annotation to get the path variable as a parameter. We also used `@RequestParam` annotation to get the request parameter as a parameter. We will use these annotations in our methods.
 
+In methods we will return a `ResponseEntity`, this is a Spring class that contains the response body and the status code. With this class we can return 404, 400, 200 etc. status codes with a response body. We will use this class to return the response to the client.
+
+### Director Service
 ```java
-@Transactional
-    public void fulfillMonthlyOperations(){
-        // Pay interest for saving accounts whose enabled saving
-        Optional<List<SavingAccount>> savingAccountsByInterestEnabledIsTrue = savingAccountRepository.getSavingAccountsByIsInterestEnabledIsTrue();
-        savingAccountsByInterestEnabledIsTrue.ifPresent(savingAccounts -> savingAccounts.stream().toList().forEach(
-                savingAccount -> savingAccount.setBalance(savingAccount.getBalance() * (1 + savingAccount.getInterestRate()))
-        ));
 
-        // Debit Credit Cart Owners that uses their limits
-        Optional<List<CreditAccount>> creditAccounts = creditAccountRepository.getCreditAccountsByBalanceIsLessThan(0.0);
-        creditAccounts.ifPresent(creditAccounts_ ->
-            creditAccounts_.stream().toList().forEach(
-                    creditAccount -> creditAccount.setBalance(creditAccount.getBalance() * (1 + creditAccount.getInterestRate()))
-            )
-        );
+// implementations
 
+@Service
+@RequiredArgsConstructor
+public class DirectorService {
+
+    private final DirectorRepository directorRepository;
+    private final EmployeeRepository employeeRepository;
+    private final ModelMapper modelMapper;
+
+    public Director getDirectorById(Long id){
+        return directorRepository.findById(id).orElseThrow(() -> new RuntimeException("Director not found"));
     }
+
+    public void addNewRecruit(Employee employee){
+        employeeRepository.save(employee);
+    }
+
+    public void fulfillMonthlyOperations(){
+        List<Employee> all = employeeRepository.findAll();
+        all.forEach(employee -> {
+            employee.setSalary(employee.getSalary() + 1000);
+            employee.setWorkedHours(0);
+        });
+        employeeRepository.saveAll(all);
+    }
+
+    // ...
+
+}
+
 ```
+
+We annote class with `@Service` annotation to tell Spring that this class is a Service. Service classes are used to implement the business logic of the application. 
+
+We explained Service and Presentation Layers on Director, if you understand the logic you can checkout the other controllers and services.
+
+And finally we need an application to test our endpoints. We will use Postman to test our endpoints. You can download Postman from [here](https://www.postman.com/downloads/).
+
+I created a collection for this application. You can import json file from `./spring_collections/v1.json` to Postman and test the endpoints.
+
+![alt text](/drawio/postman_spring.png)
+

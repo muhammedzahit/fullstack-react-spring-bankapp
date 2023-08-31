@@ -1,9 +1,11 @@
 package com.example.fullstackspringreactbankingapp.services;
 
 import com.example.fullstackspringreactbankingapp.entities.CreditAccount;
+import com.example.fullstackspringreactbankingapp.entities.Director;
 import com.example.fullstackspringreactbankingapp.entities.Employee;
 import com.example.fullstackspringreactbankingapp.entities.SavingAccount;
 import com.example.fullstackspringreactbankingapp.repositories.CreditAccountRepository;
+import com.example.fullstackspringreactbankingapp.repositories.DirectorRepository;
 import com.example.fullstackspringreactbankingapp.repositories.EmployeeRepository;
 import com.example.fullstackspringreactbankingapp.repositories.SavingAccountRepository;
 import jakarta.transaction.Transactional;
@@ -19,6 +21,7 @@ public class DirectorService {
     final private EmployeeRepository employeeRepository;
     final private SavingAccountRepository savingAccountRepository;
     final private CreditAccountRepository creditAccountRepository;
+    final private DirectorRepository directorRepository;
 
     private boolean checkEmployeeIdExists(Long employeeId) throws Exception {
         if(employeeRepository.existsEmployeeById(employeeId)){
@@ -34,6 +37,11 @@ public class DirectorService {
             throw new Exception("Net Salary must be positive !!!");
         }
         employeeRepository.save(recruit);
+    }
+
+    @Transactional
+    public void addNewDirector(Director director){
+        directorRepository.save(director);
     }
 
     @Transactional
@@ -64,9 +72,19 @@ public class DirectorService {
         Optional<List<CreditAccount>> creditAccounts = creditAccountRepository.getCreditAccountsByBalanceIsLessThan(0.0);
         creditAccounts.ifPresent(creditAccounts_ ->
             creditAccounts_.stream().toList().forEach(
-                    creditAccount -> creditAccount.setBalance(creditAccount.getBalance() * (1 + creditAccount.getInterestRate()))
+                    creditAccount -> {
+                        creditAccount.setBalance(creditAccount.getBalance() * (1 + creditAccount.getInterestRate()));
+                        creditAccount.setMonthlyMinimumPayed(false);
+                    }
             )
         );
 
+    }
+
+    public Director getDirectorById(long id) throws Exception {
+        Optional<Director> directorById = directorRepository.getDirectorById(id);
+        if(directorById.isEmpty())
+            throw new Exception("Director Id Not Found");
+        else return directorById.get();
     }
 }

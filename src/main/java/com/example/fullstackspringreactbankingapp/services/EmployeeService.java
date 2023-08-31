@@ -4,6 +4,8 @@ import com.example.fullstackspringreactbankingapp.entities.CreditAccount;
 import com.example.fullstackspringreactbankingapp.entities.SavingAccount;
 import com.example.fullstackspringreactbankingapp.entities.User;
 import com.example.fullstackspringreactbankingapp.enums.AccountType;
+import com.example.fullstackspringreactbankingapp.exceptions.EmployeeServiceException;
+import com.example.fullstackspringreactbankingapp.exceptions.UserServiceException;
 import com.example.fullstackspringreactbankingapp.repositories.CreditAccountRepository;
 import com.example.fullstackspringreactbankingapp.repositories.SavingAccountRepository;
 import com.example.fullstackspringreactbankingapp.repositories.UserRepository;
@@ -23,10 +25,11 @@ public class EmployeeService {
     private final SavingAccountRepository savingAccountRepository;
     private final CreditAccountRepository creditAccountRepository;
 
-    private void checkUserId(Long userId) throws Exception {
+    public void checkUserId(Long userId) throws Exception {
         if (!userRepository.existsUserById(userId)) {
-            throw new Exception("User ID Not Found !!!");
+            throw new Exception(UserServiceException.UserIdNotFound.getValue());
         }
+
     }
 
     @Transactional
@@ -58,12 +61,12 @@ public class EmployeeService {
     public void deleteAccount(Long accountId, AccountType accountType) throws Exception {
         if(accountType == AccountType.CREDIT){
             if(!creditAccountRepository.existsCreditAccountById(accountId))
-                throw new Exception("No Credit Account Found With This ID !!!");
+                throw new Exception(EmployeeServiceException.NoCreditAccountFound.getValue());
             creditAccountRepository.deleteCreditAccountById(accountId);
         }
         else if(accountType == AccountType.SAVING){
             if(!savingAccountRepository.existsSavingAccountById(accountId))
-                throw new Exception("No Saving Account Found With This ID !!!");
+                throw new Exception(EmployeeServiceException.NoSavingAccountFound.getValue());
             savingAccountRepository.deleteSavingAccountById(accountId);
         }
     }
@@ -77,11 +80,4 @@ public class EmployeeService {
         return savingAccounts;
     }
 
-    @Transactional
-    public CreditAccount getCreditAccountById(Long creditAccountId) throws Exception {
-        Optional<CreditAccount> optional = creditAccountRepository.getCreditAccountById(creditAccountId);
-        if(optional.isEmpty())
-            throw new Exception("Credit Account not found with this specific ID !!!");
-        return optional.get();
-    }
 }
