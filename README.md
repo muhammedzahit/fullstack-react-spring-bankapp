@@ -15,3 +15,5 @@ I will be breaking down the app into sections. You can traverse the sections by 
 * [Section 3 : Implementing Business Layer](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec3)
 
 * [Section 4 : Implementing Presentation Layer](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec4)
+
+* [Section 5 : Implementing Spring Security 6](https://github.com/muhammedzahit/fullstack-react-spring-bankapp/tree/sec5)
