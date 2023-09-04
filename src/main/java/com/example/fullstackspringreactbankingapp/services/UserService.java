@@ -1,5 +1,6 @@
 package com.example.fullstackspringreactbankingapp.services;
 
+import com.example.fullstackspringreactbankingapp.dto.Authentication.AuthenticationRegisterDto;
 import com.example.fullstackspringreactbankingapp.entities.CreditAccount;
 import com.example.fullstackspringreactbankingapp.entities.Employee;
 import com.example.fullstackspringreactbankingapp.entities.SavingAccount;
@@ -7,6 +8,8 @@ import com.example.fullstackspringreactbankingapp.entities.User;
 import com.example.fullstackspringreactbankingapp.enums.AccountType;
 import com.example.fullstackspringreactbankingapp.exceptions.EmployeeServiceException;
 import com.example.fullstackspringreactbankingapp.exceptions.UserServiceException;
+import com.example.fullstackspringreactbankingapp.jwtAuthentication.AuthenticationService;
+import com.example.fullstackspringreactbankingapp.jwtAuthentication.Role;
 import com.example.fullstackspringreactbankingapp.repositories.CreditAccountRepository;
 import com.example.fullstackspringreactbankingapp.repositories.EmployeeRepository;
 import com.example.fullstackspringreactbankingapp.repositories.SavingAccountRepository;
@@ -65,7 +68,18 @@ public class UserService {
     @Transactional
     public void addUser(User user, Long responsibleId) throws Exception {
         Optional<Employee> employeeById = employeeRepository.findEmployeeById(responsibleId);
-        if(employeeById.isEmpty()) throw new Exception("Error : " + EmployeeServiceException.EmployeeIdNotFound.getValue());
+        if(employeeById.isEmpty()) throw new IllegalArgumentException("Error : " + EmployeeServiceException.EmployeeIdNotFound.getValue());
+        addUserHelper(user, employeeById);
+    }
+
+    @Transactional
+    public void addUserWithRandomResponsible(User user) throws Exception{
+        Optional<Employee> employeeById = employeeRepository.findRandomEmployee();
+        if(employeeById.isEmpty()) throw new IllegalArgumentException("Error : " + EmployeeServiceException.TableEmpty.getValue());
+        addUserHelper(user, employeeById);
+    }
+
+    private void addUserHelper(User user, Optional<Employee> employeeById) {
         user.setResponsible(employeeById.get());
         user.setId(null);
         userRepository.save(user);

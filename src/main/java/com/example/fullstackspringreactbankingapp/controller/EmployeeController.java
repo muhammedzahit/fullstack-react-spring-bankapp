@@ -6,11 +6,13 @@ import com.example.fullstackspringreactbankingapp.services.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/employee")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('EMPLOYEE', 'ADMIN')")
 public class EmployeeController {
     private final EmployeeService employeeService;
 

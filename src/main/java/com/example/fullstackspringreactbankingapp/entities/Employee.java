@@ -18,8 +18,11 @@ public class Employee{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String fullName;
-    private String email;
-    private String password;
+
+    @OneToOne
+    @JoinColumn(name = "token_user_id")
+    private TokenUser tokenUser;
+
     private Double netSalary;
 
     @ManyToOne

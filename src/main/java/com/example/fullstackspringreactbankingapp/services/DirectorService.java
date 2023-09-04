@@ -39,6 +39,16 @@ public class DirectorService {
         employeeRepository.save(recruit);
     }
 
+    public void addNewRecruitWithRandomDirector(Employee recruit) throws Exception {
+        if(recruit.getNetSalary() < 0){
+            throw new Exception("Net Salary must be positive !!!");
+        }
+        Optional<Director> randomDirector = directorRepository.findRandomDirector();
+        if(randomDirector.isEmpty()) throw new Exception("No Record Found in Directors Table !!! Please Add an Director");
+        recruit.setDirector(randomDirector.get());
+        employeeRepository.save(recruit);
+    }
+
     @Transactional
     public void addNewDirector(Director director){
         directorRepository.save(director);
